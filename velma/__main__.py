@@ -1,9 +1,8 @@
-from . import __version__
-
 import argparse
 import sys
+from typing import Any, Final
 
-from typing import Final, Any
+from . import __version__
 
 EXIT_SUCCESS: Final[int] = 0
 
@@ -47,3 +46,7 @@ def main() -> int:
     print(files)
 
     return EXIT_SUCCESS
+
+
+if __name__ == "__main__":
+    sys.exit(main())

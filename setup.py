@@ -1,7 +1,7 @@
 import os
-
-from setuptools import setup, Extension
 from typing import Iterator
+
+from setuptools import Extension, setup
 
 
 def find_sources(basepath: str) -> Iterator[str]:
@@ -22,10 +22,10 @@ def find_sources(basepath: str) -> Iterator[str]:
 
 
 vera = Extension(
-    'velma',
+    "velma",
     sources=list(find_sources("vera")),
     include_dirs=["vera"],
-    language="c"
+    language="c",
 )
 
 if __name__ == "__main__":

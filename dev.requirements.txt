@@ -1,0 +1,7 @@
+build
+setuptools
+twine
+black
+isort
+mypy
+vulture

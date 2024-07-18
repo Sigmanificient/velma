@@ -16,7 +16,7 @@ $(VENV_DIR):
 	$(VBIN)/pip install .
 
 dist: $(VENV_DIR)
-	$(VBIN)/python -m pip install --upgrade -r build.requirements.txt
+	$(VBIN)/python -m pip install --upgrade -r dev.requirements.txt
 	$(VBIN)/python -m build
 
 .PHONY: setup # creates a virtual env, the install velma into it
