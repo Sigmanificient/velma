@@ -15,10 +15,10 @@ buildPythonPackage {
 
   pythonImportsCheck = [ "vera" ];
 
-  meta = with lib; {
+  meta = {
     description = "Modern Reimplementation of vera built with C internals";
-    license = licenses.mit;
+    license = lib.licenses.mit;
     homepage = "https://github.com/Sigmanificient/velma";
-    maintainers = with maintainers; [ sigmanificient ];
+    maintainers = with lib.maintainers; [ sigmanificient ];
   };
 }

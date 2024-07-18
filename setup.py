@@ -6,8 +6,5 @@ module = Extension(
 )
 
 setup(
-    name='vera',
-    version='1.0',
-    description='Banana vera++',
     ext_modules=[module]
 )

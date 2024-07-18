@@ -2,3 +2,10 @@
 build
 dist
 *egg-info
+
+# C
+*.so
+
+# nix
+.direnv
+result*
