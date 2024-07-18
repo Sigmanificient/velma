@@ -3,7 +3,7 @@
 #include "vera_tokens.h"
 
 static
-PyObject* py_getTokens(PyObject* self, PyObject* args)
+PyObject* py_gettokens(PyObject* self, PyObject* args)
 {
     const char *filename;
     int from_line;
@@ -67,8 +67,23 @@ PyObject* py_getTokens(PyObject* self, PyObject* args)
 }
 
 static
+PyObject* py_getsourcefilenames(PyObject* self, PyObject* args)
+{
+    PyObject *py_result = PyList_New(0);
+    char *buff;
+    size_t buffsize;
+
+    while (getline(&buff, &buffsize, stdin) > 0) {
+        buff[strcspn(buff, "\n")] = '\0';
+        PyList_Append(py_result, PyUnicode_FromString(buff));
+    }
+    return py_result;
+}
+
+static
 PyMethodDef VERA_METHODS[] = {
-    {"getTokens", py_getTokens, METH_VARARGS, "Get tokens from a file."},
+    {"getTokens", py_gettokens, METH_VARARGS, "Get tokens from a file."},
+    {"getSourceFileNames", py_getsourcefilenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
 };
 

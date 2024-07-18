@@ -2,6 +2,7 @@ import argparse
 import re
 import os
 import pathlib
+import subprocess
 import sys
 
 from typing import Any, Sequence
@@ -77,6 +78,8 @@ def load_profile(root: str, profile_name: str) -> tuple[set[str], int]:
         return inval, os.EX_USAGE
 
     ruleset = set(re.findall(r"[\w-]+", matched.groups()[0]))
+    abs_ruleset = set()
+
     for rule in ruleset:
         script_filename = os.path.extsep.join((rule, "py"))
         script_path = os.path.join(root, "rules", script_filename)
@@ -85,7 +88,8 @@ def load_profile(root: str, profile_name: str) -> tuple[set[str], int]:
             print("cannot open script:", rule)
             return inval, os.EX_IOERR
 
-    return ruleset, os.EX_OK
+        abs_ruleset.add(script_path)
+    return abs_ruleset, os.EX_OK
 
 
 def main() -> int:
@@ -99,8 +103,8 @@ def main() -> int:
     root = args.root
     files = args.files or sys.stdin.read()
 
-    print(files)
-
+    for script in scripts:
+        subprocess.run((sys.executable, script), input=files.encode())
     return os.EX_OK
 
 

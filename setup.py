@@ -22,7 +22,7 @@ def find_sources(basepath: str) -> Iterator[str]:
 
 
 vera = Extension(
-    "velma",
+    "vera",
     sources=list(find_sources("vera")),
     include_dirs=["vera"],
     language="c",
