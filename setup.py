@@ -21,13 +21,12 @@ def find_sources(basepath: str) -> Iterator[str]:
         yield fullpath
 
 
-module = Extension(
-    'vera',
-    sources=list(find_sources("src/velma")),
-    include_dirs=["velma"],
+vera = Extension(
+    'velma',
+    sources=list(find_sources("vera")),
+    include_dirs=["vera"],
     language="c"
 )
 
-setup(
-    ext_modules=[module]
-)
+if __name__ == "__main__":
+    setup(ext_modules=[vera])

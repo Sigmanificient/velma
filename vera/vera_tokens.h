@@ -1,8 +1,6 @@
 #ifndef TOKEN_H
     #define TOKEN_H
 
-    #include <stddef.h>
-
 typedef struct {
     int start_line;
     int start_column;
