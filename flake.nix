@@ -14,6 +14,7 @@
         default = pkgs.mkShell {
           inputsFrom = [ self.packages.${pkgs.system}.velma ];
           hardeningDisable = [ "all" ];
+          packages = [ pkgs.bear ];
 
           env.NIX_CFLAGS_COMPILE = "-isystem ${pkgs.python311}/include/python3.11";
         };
