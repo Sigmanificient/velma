@@ -1,9 +1,30 @@
 .PHONY: help # Show this help message
 help:
 	@ cat $(firstword $(MAKEFILE_LIST)) \
-		| grep -E "^.PHONY:"            \
-		| cut -d ' ' -f 2,3-            \
-		| sed 's/#/     		/g'
+		| grep -E "^.PHONY:" | cut -d ' ' -f 2,3- | sed 's/#/     		/g'
+
+VENV_DIR = venv
+PY = python
+
+VBIN ?= $(VENV_DIR)/bin
+
+.PHONY: build # build wheel
+build: dist
+
+$(VENV_DIR):
+	$(PY) -m venv $(VENV_DIR)
+	$(VBIN)/pip install .
+
+dist: $(VENV_DIR)
+	$(VBIN)/python -m pip install --upgrade -r build.requirements.txt
+	$(VBIN)/python -m build
+
+.PHONY: setup # creates a virtual env, the install velma into it
+setup: $(VENV_DIR)
+
+.PHONY: resetup # remove virtual env, then setup
+.NOTPARALLEL: resetup
+resetup: mrproper setup
 
 .PHONY: compiledb # create compile_commands.json for IDE support
 compiledb:
@@ -13,7 +34,7 @@ BUILD_DIRS := build dist
 BUILD_DIRS += velma.egg-info
 BUILD_DIRS += result
 
-VENV_DIR = venv
+# cleanin
 
 .PHONY: clean # Remove all intermediate files, build dirs
 clean:
@@ -26,6 +47,23 @@ fclean: clean
 .PHONY: mrproper # Remove virtual env, and fclean
 mrproper: fclean
 	@ $(RM) -r $(VENV_DIR)
+
+# pypi upload
+
+VELMA_TAR = $(wildcard dist/velma-*.tar.gz)
+
+.PHONY: pypi_test # Upload package to test.pypi.org
+pypi_test: dist
+	$(VBIN)/python -m twine upload --repository testpypi $(VELMA_TAR)
+
+.PHONY: test_pip # attempt install from test.pypi.org, reset venv
+test_pip: mrproper $(VENV_DIR)
+	$(VBIN)/python -m pip install --index-url https://test.pypi.org/simple --no-deps velma
+
+.PHONY: upload # Upload to pypi.org, warning: it the real thing!
+upload: dist
+	$(VBIN)/python -m twine check $(VELMA_TAR)
+	$(VBIN)/python -m twine upload $(VELMA_TAR)
 
 # logging utilities
 
