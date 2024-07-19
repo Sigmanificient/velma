@@ -1,6 +1,7 @@
-{ lib
-, buildPythonPackage
-, setuptools
+{
+  lib,
+  buildPythonPackage,
+  setuptools,
 }:
 
 buildPythonPackage {
