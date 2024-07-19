@@ -197,6 +197,8 @@ def getTokens(
 def isBinary(filepath: str) -> bool: ...
 def report(filepath: str, line: int, rule: str) -> None: ...
 
+def _register_sources(sources: list[str]) -> bool: ...
+
 __all__ = (
     "Token",
     "getAllLines",
@@ -207,4 +209,5 @@ __all__ = (
     "getTokens",
     "isBinary",
     "report",
+    "_register_sources"
 )

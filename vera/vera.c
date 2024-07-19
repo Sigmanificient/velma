@@ -1,15 +1,17 @@
+#include <stdbool.h>
+
 #include <Python.h>
 
 #include "vera_tokens.h"
 
-static char **FILE_TABLE = NULL;
-static size_t FILE_TABLE_SIZE = 0;
+static PyObject *FILE_TABLE = NULL;
+static Py_ssize_t FILE_TABLE_SIZE = 0;
 
 #define FILE_TABLE_MIN_SIZE 128
 #define UNUSED __attribute__((unused))
 
 static
-PyObject* py_get_tokens(PyObject* self, PyObject* args)
+PyObject *py_get_tokens(PyObject *self UNUSED, PyObject *args)
 {
     const char *filename;
     int from_line;
@@ -73,57 +75,37 @@ PyObject* py_get_tokens(PyObject* self, PyObject* args)
 }
 
 static
-PyObject* py_get_source_filenames(PyObject* self UNUSED, PyObject* args UNUSED)
+PyObject *py_register_sources(PyObject *self UNUSED, PyObject *args)
 {
-    static char *buff = NULL;
-    static size_t buffsize = 0;
-    ssize_t len;
-    size_t i;
-    PyObject *filenames;
+    PyObject *input_list;
+    Py_ssize_t list_size;
 
-    if (FILE_TABLE != NULL)
-        goto send_list;
-
-    FILE_TABLE = malloc(FILE_TABLE_MIN_SIZE * sizeof *FILE_TABLE);
-    if (FILE_TABLE == NULL)
+    if (!PyArg_ParseTuple(args, "O", &input_list))
         return NULL;
 
-    FILE_TABLE_SIZE = FILE_TABLE_MIN_SIZE;
-    for (i = 0; (len = getline(&buff, &buffsize, stdin)) > 1; i++) {
-        FILE_TABLE[i] = strndup(buff, len - 1);
-        if (FILE_TABLE[i] == NULL)
-            goto failed_alloc;
+    list_size = PyList_Size(input_list);
+    if (FILE_TABLE != NULL)
+        Py_DECREF(FILE_TABLE);
 
-        if (i == FILE_TABLE_SIZE) {
-            FILE_TABLE_SIZE <<= 1;
-            FILE_TABLE = reallocarray(
-                FILE_TABLE, FILE_TABLE_SIZE, sizeof *FILE_TABLE
-            );
-        }
+    FILE_TABLE = input_list;
+    FILE_TABLE_SIZE = list_size;
+    Py_INCREF(FILE_TABLE);
 
-        if (errno == ENOMEM)
-            goto failed_alloc;
-    }
+    Py_RETURN_TRUE;
+}
 
-    FILE_TABLE_SIZE = i;
-
-send_list:
-    filenames = PyList_New(FILE_TABLE_SIZE);
-    for (i = 0; i < FILE_TABLE_SIZE; i++)
-        PyList_SetItem(filenames, i, PyUnicode_FromString(FILE_TABLE[i]));
-
-    return filenames;
-
-failed_alloc:
-    for (; --i >= 0; )
-        free(FILE_TABLE[i]);
-    free(FILE_TABLE);
-    return NULL;
+static
+PyObject *py_get_source_filenames(PyObject *self UNUSED, PyObject *args UNUSED)
+{
+    if (FILE_TABLE == NULL)
+        exit(EXIT_FAILURE);
+    return FILE_TABLE;
 }
 
 static
 PyMethodDef VERA_METHODS[] = {
     // {"getTokens", py_get_tokens, METH_VARARGS, "."},
+    {"_register_sources", py_register_sources, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
 };

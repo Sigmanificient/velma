@@ -1,10 +1,13 @@
 import argparse
+import importlib.util
 import os
 import pathlib
 import re
 import subprocess
 import sys
 from typing import Any, Sequence
+
+import vera
 
 from . import __version__
 
@@ -91,6 +94,17 @@ def load_profile(root: str, profile_name: str) -> tuple[set[str], int]:
     return abs_ruleset, os.EX_OK
 
 
+def exec_from_abspath(script: str) -> bool:
+    spec = importlib.util.spec_from_file_location("__main__", script)
+    if spec is None or spec.loader is None:
+        return False
+
+    module = importlib.util.module_from_spec(spec)
+
+    spec.loader.exec_module(module)
+    return True
+
+
 def main() -> int:
     args = parse_args()
     root = os.path.abspath(args.root)
@@ -100,10 +114,11 @@ def main() -> int:
         return err
 
     root = args.root
-    files = "\n".join(args.files) or sys.stdin.read()
+    files: list[str] = args.files or sys.stdin.read().splitlines()
 
+    vera._register_sources(files)
     for script in scripts:
-        subprocess.run((sys.executable, script), input=files.encode())
+        exec_from_abspath(script)
 
     return os.EX_OK
 
