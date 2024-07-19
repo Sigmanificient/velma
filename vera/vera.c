@@ -99,12 +99,13 @@ PyObject *py_get_source_filenames(PyObject *self UNUSED, PyObject *args UNUSED)
 {
     if (FILE_TABLE == NULL)
         exit(EXIT_FAILURE);
+    Py_INCREF(FILE_TABLE);
     return FILE_TABLE;
 }
 
 static
 PyMethodDef VERA_METHODS[] = {
-    // {"getTokens", py_get_tokens, METH_VARARGS, "."},
+    {"getTokens", py_get_tokens, METH_VARARGS, "."},
     {"_register_sources", py_register_sources, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
