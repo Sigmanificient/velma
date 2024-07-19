@@ -3,8 +3,9 @@ import importlib.util
 import os
 import pathlib
 import re
-import subprocess
 import sys
+import traceback
+
 from typing import Any, Sequence
 
 import vera
@@ -95,14 +96,24 @@ def load_profile(root: str, profile_name: str) -> tuple[set[str], int]:
 
 
 def exec_from_abspath(script: str) -> bool:
-    spec = importlib.util.spec_from_file_location("__main__", script)
-    if spec is None or spec.loader is None:
+    script_dir = os.path.dirname(os.path.abspath(script))
+    sys.path.insert(0, script_dir)
+
+    try:
+        spec = importlib.util.spec_from_file_location("__main__", script)
+        if spec is None or spec.loader is None:
+            return False
+
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return True
+
+    except Exception:
+        traceback.print_exc()
         return False
 
-    module = importlib.util.module_from_spec(spec)
-
-    spec.loader.exec_module(module)
-    return True
+    finally:
+        sys.path.pop(0)
 
 
 def main() -> int:
