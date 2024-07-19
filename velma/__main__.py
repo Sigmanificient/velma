@@ -1,10 +1,9 @@
 import argparse
-import re
 import os
 import pathlib
+import re
 import subprocess
 import sys
-
 from typing import Any, Sequence
 
 from . import __version__
@@ -57,7 +56,7 @@ def check_missing_subdirs(root_dir: str) -> tuple[str, ...]:
 
 
 def load_profile(root: str, profile_name: str) -> tuple[set[str], int]:
-    inval = set()
+    inval: set[str] = set()
 
     if missing_dirs := check_missing_subdirs(root):
         print("Invalid root. Missing subfolder(s):", ", ".join(missing_dirs))
@@ -101,7 +100,7 @@ def main() -> int:
         return err
 
     root = args.root
-    files = '\n'.join(args.files) or sys.stdin.read()
+    files = "\n".join(args.files) or sys.stdin.read()
 
     for script in scripts:
         subprocess.run((sys.executable, script), input=files.encode())
