@@ -16,13 +16,13 @@
           hardeningDisable = [ "all" ];
           packages = with pkgs; [ bear black ];
 
-          env.NIX_CFLAGS_COMPILE = "-isystem ${pkgs.python311}/include/python3.11";
+          env.NIX_CFLAGS_COMPILE = "-isystem ${pkgs.python311}/include/python3.12";
         };
       });
 
       packages = forAllSystems (pkgs:
         let
-          pypkgs = pkgs.python311.pkgs;
+          pypkgs = pkgs.python312.pkgs;
         in
         {
           default = self.packages.${pkgs.system}.velma;

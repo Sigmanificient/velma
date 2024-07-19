@@ -4,7 +4,7 @@ help:
 		| grep -E "^.PHONY:" | cut -d ' ' -f 2,3- | sed 's/#/     		/g'
 
 VENV_DIR = venv
-PY = python
+PY ?= python
 
 VBIN ?= $(VENV_DIR)/bin
 
@@ -16,8 +16,8 @@ $(VENV_DIR):
 	$(VBIN)/pip install .
 
 dist: $(VENV_DIR)
-	$(VBIN)/python -m pip install --upgrade -r dev.requirements.txt
-	$(VBIN)/python -m build
+	$(VBIN)/$(PY) -m pip install --upgrade -r dev.requirements.txt
+	$(VBIN)/$(PY) -m build
 
 .PHONY: setup # creates a virtual env, the install velma into it
 setup: $(VENV_DIR)
@@ -54,16 +54,16 @@ VELMA_TAR = $(wildcard dist/velma-*.tar.gz)
 
 .PHONY: pypi_test # Upload package to test.pypi.org
 pypi_test: dist
-	$(VBIN)/python -m twine upload --repository testpypi $(VELMA_TAR)
+	$(VBIN)/$(PY) -m twine upload --repository testpypi $(VELMA_TAR)
 
 .PHONY: test_pip # attempt install from test.pypi.org, reset venv
 test_pip: mrproper $(VENV_DIR)
-	$(VBIN)/python -m pip install --index-url https://test.pypi.org/simple --no-deps velma
+	$(VBIN)/$(PY) -m pip install --index-url https://test.pypi.org/simple --no-deps velma
 
 .PHONY: upload # Upload to pypi.org, warning: it the real thing!
 upload: dist
-	$(VBIN)/python -m twine check $(VELMA_TAR)
-	$(VBIN)/python -m twine upload $(VELMA_TAR)
+	$(VBIN)/$(PY) -m twine check $(VELMA_TAR)
+	$(VBIN)/$(PY) -m twine upload $(VELMA_TAR)
 
 # logging utilities
 
