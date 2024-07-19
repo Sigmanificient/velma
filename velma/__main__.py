@@ -101,10 +101,11 @@ def main() -> int:
         return err
 
     root = args.root
-    files = args.files or sys.stdin.read()
+    files = '\n'.join(args.files) or sys.stdin.read()
 
     for script in scripts:
         subprocess.run((sys.executable, script), input=files.encode())
+
     return os.EX_OK
 
 
