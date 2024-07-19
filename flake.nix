@@ -16,7 +16,13 @@
           hardeningDisable = [ "all" ];
           packages = with pkgs; [ bear black ];
 
-          env.NIX_CFLAGS_COMPILE = "-isystem ${pkgs.python311}/include/python3.12";
+          env.NIX_CFLAGS_COMPILE = let
+            velma = self.packages.${pkgs.system}.velma;
+            py = {
+              pkg = builtins.head velma.drvAttrs.nativeBuildInputs;
+              version = pkgs.lib.versions.majorMinor py.pkg.version;
+            };
+          in "-isystem ${py.pkg}/include/python${py.version}";
         };
       });
 
