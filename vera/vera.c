@@ -2,8 +2,14 @@
 
 #include "vera_tokens.h"
 
+static char **FILE_TABLE = NULL;
+static size_t FILE_TABLE_SIZE = 0;
+
+#define FILE_TABLE_MIN_SIZE 128
+#define UNUSED __attribute__((unused))
+
 static
-PyObject* py_gettokens(PyObject* self, PyObject* args)
+PyObject* py_get_tokens(PyObject* self, PyObject* args)
 {
     const char *filename;
     int from_line;
@@ -67,23 +73,58 @@ PyObject* py_gettokens(PyObject* self, PyObject* args)
 }
 
 static
-PyObject* py_getsourcefilenames(PyObject* self, PyObject* args)
+PyObject* py_get_source_filenames(PyObject* self UNUSED, PyObject* args UNUSED)
 {
-    PyObject *py_result = PyList_New(0);
-    char *buff;
-    size_t buffsize;
+    static char *buff = NULL;
+    static size_t buffsize = 0;
+    ssize_t len;
+    size_t i;
+    PyObject *filenames;
 
-    while (getline(&buff, &buffsize, stdin) > 0) {
-        buff[strcspn(buff, "\n")] = '\0';
-        PyList_Append(py_result, PyUnicode_FromString(buff));
+    if (FILE_TABLE != NULL)
+        goto send_list;
+
+    FILE_TABLE = malloc(FILE_TABLE_MIN_SIZE * sizeof *FILE_TABLE);
+    if (FILE_TABLE == NULL)
+        return NULL;
+
+    FILE_TABLE_SIZE = FILE_TABLE_MIN_SIZE;
+    for (i = 0; (len = getline(&buff, &buffsize, stdin)) > 1; i++) {
+        FILE_TABLE[i] = strndup(buff, len - 1);
+        if (FILE_TABLE[i] == NULL)
+            goto failed_alloc;
+
+        if (i == FILE_TABLE_SIZE) {
+            FILE_TABLE_SIZE <<= 1;
+            FILE_TABLE = reallocarray(
+                FILE_TABLE, FILE_TABLE_SIZE, sizeof *FILE_TABLE
+            );
+        }
+
+        if (errno == ENOMEM)
+            goto failed_alloc;
     }
-    return py_result;
+
+    FILE_TABLE_SIZE = i;
+
+send_list:
+    filenames = PyList_New(FILE_TABLE_SIZE);
+    for (i = 0; i < FILE_TABLE_SIZE; i++)
+        PyList_SetItem(filenames, i, PyUnicode_FromString(FILE_TABLE[i]));
+
+    return filenames;
+
+failed_alloc:
+    for (; --i >= 0; )
+        free(FILE_TABLE[i]);
+    free(FILE_TABLE);
+    return NULL;
 }
 
 static
 PyMethodDef VERA_METHODS[] = {
-    {"getTokens", py_gettokens, METH_VARARGS, "Get tokens from a file."},
-    {"getSourceFileNames", py_getsourcefilenames, METH_VARARGS, "."},
+    // {"getTokens", py_get_tokens, METH_VARARGS, "."},
+    {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
 };
 
