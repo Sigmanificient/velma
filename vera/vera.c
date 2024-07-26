@@ -1,4 +1,5 @@
 #include <stdbool.h>
+#include <stdio.h>
 
 #include <Python.h>
 
@@ -104,7 +105,21 @@ PyObject *py_get_source_filenames(PyObject *self UNUSED, PyObject *args UNUSED)
 }
 
 static
+PyObject *py_report(PyObject *self UNUSED, PyObject *args)
+{
+    int line;
+    char *filename;
+    char *violation;
+
+    if (!PyArg_ParseTuple(args, "sis", &filename, &line, &violation))
+        return NULL;
+    fprintf(stderr, "%s:%d: %s\n", filename, line, violation);
+    Py_RETURN_NONE;
+}
+
+static
 PyMethodDef VERA_METHODS[] = {
+    {"report", py_report, METH_VARARGS, "."},
     {"getTokens", py_get_tokens, METH_VARARGS, "."},
     {"_register_sources", py_register_sources, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},

@@ -1,3 +1,4 @@
 set rules {
     list_files
+    report_this
 }
