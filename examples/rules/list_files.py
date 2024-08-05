@@ -1,5 +1,5 @@
 import vera
 
 if __name__ == "__main__":
-    print(vera.getSourceFileNames())
-    print("reversed!", vera.getSourceFileNames()[::-1])
+    print(list(vera.getSourceFileNames()))
+    print("reversed!", list(reversed(vera.getSourceFileNames())))
