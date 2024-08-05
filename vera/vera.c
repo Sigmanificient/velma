@@ -139,10 +139,28 @@ PyObject *py_report(PyObject *self UNUSED, PyObject *args)
 }
 
 static
+PyObject *py_get_line_count(PyObject *self UNUSED, PyObject *args)
+{
+    char const *filepath;
+    char *content;
+    ssize_t filesize;
+    size_t linecount = 0;
+
+    if (!PyArg_ParseTuple(args, "s", &filepath))
+        return NULL;
+    filesize = file_read(filepath, &content);
+    for (ssize_t i = 0; i < filesize; i++)
+        if (content[i] == '\n')
+            linecount++;
+    return Py_BuildValue("i", linecount + 1);
+}
+
+static
 PyMethodDef VERA_METHODS[] = {
     {"report", py_report, METH_VARARGS, "."},
     {"isBinary", py_is_binary, METH_VARARGS, "."},
     {"getTokens", py_get_tokens, METH_VARARGS, "."},
+    {"getLineCount", py_get_line_count, METH_VARARGS, "."},
     {"_register_sources", py_register_sources, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
