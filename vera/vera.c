@@ -1,8 +1,12 @@
 #include <stdbool.h>
 #include <stdio.h>
 
+#include <fcntl.h>
+#include <sys/stat.h>
+
 #include <Python.h>
 
+#include "internal.h"
 #include "vera_tokens.h"
 
 static PyObject *FILE_TABLE = NULL;
@@ -105,6 +109,23 @@ PyObject *py_get_source_filenames(PyObject *self UNUSED, PyObject *args UNUSED)
 }
 
 static
+PyObject *py_is_binary(PyObject *self UNUSED, PyObject *args UNUSED)
+{
+    char const *filepath;
+    char *content;
+    ssize_t filesize;
+
+    if (!PyArg_ParseTuple(args, "s", &filepath))
+        return NULL;
+    filesize = file_read(filepath, &content);
+    if (filesize < 0)
+        return NULL;
+    if (memchr(content, '\0', filesize) != &content[filesize])
+        Py_RETURN_TRUE;
+    Py_RETURN_FALSE;
+}
+
+static
 PyObject *py_report(PyObject *self UNUSED, PyObject *args)
 {
     int line;
@@ -120,6 +141,7 @@ PyObject *py_report(PyObject *self UNUSED, PyObject *args)
 static
 PyMethodDef VERA_METHODS[] = {
     {"report", py_report, METH_VARARGS, "."},
+    {"isBinary", py_is_binary, METH_VARARGS, "."},
     {"getTokens", py_get_tokens, METH_VARARGS, "."},
     {"_register_sources", py_register_sources, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
