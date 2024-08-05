@@ -156,11 +156,21 @@ PyObject *py_get_line_count(PyObject *self UNUSED, PyObject *args)
 }
 
 static
+PyObject *py_get_parameter(PyObject *self UNUSED, PyObject *args UNUSED)
+{
+    PyErr_SetString(
+        PyExc_NotImplementedError,
+        "getParameter will not be implemented.");
+    return NULL;
+}
+
+static
 PyMethodDef VERA_METHODS[] = {
     {"report", py_report, METH_VARARGS, "."},
     {"isBinary", py_is_binary, METH_VARARGS, "."},
     {"getTokens", py_get_tokens, METH_VARARGS, "."},
     {"getLineCount", py_get_line_count, METH_VARARGS, "."},
+    {"getParameter", py_get_parameter, METH_VARARGS, "."},
     {"_register_sources", py_register_sources, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
