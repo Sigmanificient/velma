@@ -1,12 +1,16 @@
 #ifndef TOKEN_H
     #define TOKEN_H
 
+    #include <Python.h>
+
 typedef struct {
-    int start_line;
-    int start_column;
-    int end_line;
-    int end_column;
+    char *file;
     char *name;
+    char *raw;
+    char *type;
+    char *value;
+    int column;
+    int line;
 } Token;
 
 typedef struct {
@@ -23,5 +27,16 @@ TokenVector get_tokens(
     char const **token_filter,
     int filter_size
 );
+
+typedef struct {
+    PyObject_HEAD
+    char *file;
+    char *name;
+    char *raw;
+    char *type;
+    char *value;
+    int column;
+    int line;
+} PyTokenObject;
 
 #endif

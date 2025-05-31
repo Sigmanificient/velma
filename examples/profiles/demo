@@ -1,4 +1,5 @@
 set rules {
     list_files
     report_this
+    print_token_region
 }

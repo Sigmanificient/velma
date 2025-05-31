@@ -1,10 +1,11 @@
-#include <stdbool.h>
-#include <stdio.h>
-
 #include <fcntl.h>
+#include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <sys/stat.h>
 
 #include <Python.h>
+#include <structmember.h>
 
 #include "internal.h"
 #include "vera_tokens.h"
@@ -15,6 +16,27 @@ static bool NO_DUPLICATION = 0;
 
 #define FILE_TABLE_MIN_SIZE 128
 #define UNUSED __attribute__((unused))
+
+static PyMemberDef PY_TOKEN_MEMBERS[] = {
+    {"file", T_STRING, offsetof(PyTokenObject, file), 0, "file"},
+    {"name", T_STRING, offsetof(PyTokenObject, name), 0, "name"},
+    {"raw", T_STRING, offsetof(PyTokenObject, raw), 0, "raw"},
+    {"type", T_STRING, offsetof(PyTokenObject, name), 0, "type"},
+    {"value", T_STRING, offsetof(PyTokenObject, value), 0, "value"},
+    {"column", T_INT, offsetof(PyTokenObject, column), 0, "column"},
+    {"line", T_INT, offsetof(PyTokenObject, line), 0, "line"},
+    {NULL}
+};
+
+static PyTypeObject PY_TOKEN_TYPE = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    .tp_name = "vera.Token",
+    .tp_basicsize = sizeof(PyTokenObject),
+    .tp_flags = Py_TPFLAGS_DEFAULT,
+    .tp_doc = "Token object",
+    .tp_new = PyType_GenericNew,
+    .tp_members = PY_TOKEN_MEMBERS
+};
 
 static
 PyObject *py_get_tokens(PyObject *self UNUSED, PyObject *args)
@@ -63,19 +85,24 @@ PyObject *py_get_tokens(PyObject *self UNUSED, PyObject *args)
         filter_size
     );
 
+    if (result.count < 0)
+        return NULL;
+
     free(c_token_filter);
     PyObject *py_result = PyList_New(result.count);
 
     for (int i = 0; i < result.count; i++) {
-        PyObject *token = Py_BuildValue(
-            "{s:i, s:i, s:i, s:i, s:s}",
-            "start_line", result.tokens[i].start_line,
-            "start_column", result.tokens[i].start_column,
-            "end_line", result.tokens[i].end_line,
-            "end_column", result.tokens[i].end_column,
-            "name", result.tokens[i].name
-        );
-        PyList_SetItem(py_result, i, token);
+        PyTokenObject *token = PyObject_New(PyTokenObject, &PY_TOKEN_TYPE);
+        Token *src = &result.tokens[i];
+
+        token->column = src->column;
+        token->value = src->value;
+        token->file = src->file;
+        token->line = src->line;
+        token->name = src->name;
+        token->raw = src->raw;
+        token->type = src->type;
+        PyList_SetItem(py_result, i, (PyObject *)token);
     }
     return py_result;
 }
@@ -123,6 +150,7 @@ PyObject *py_is_binary(PyObject *self UNUSED, PyObject *args UNUSED)
         return NULL;
     if (memchr(content, '\0', filesize) != &content[filesize])
         Py_RETURN_TRUE;
+    free(content);
     Py_RETURN_FALSE;
 }
 
@@ -230,5 +258,12 @@ struct PyModuleDef VERA_MODULE = {
 
 PyMODINIT_FUNC PyInit_vera(void)
 {
-    return PyModule_Create(&VERA_MODULE);
+    PyObject *mod = PyModule_Create(&VERA_MODULE);
+
+    if (PyType_Ready(&PY_TOKEN_TYPE) < 0)
+        return NULL;
+
+    Py_INCREF(&PY_TOKEN_TYPE);
+    PyModule_AddObject(mod, "Token", (PyObject *) &PY_TOKEN_TYPE);
+    return mod;
 }
