@@ -12,7 +12,6 @@ buildPythonPackage {
   src = ./.;
 
   build-system = [ setuptools ];
-  dependencies = [ ]; # for now
 
   pythonImportsCheck = [ "vera" ];
 

@@ -32,6 +32,16 @@
             in
             "-isystem ${py.pkg}/include/python${py.version}";
         };
+
+        vera-clang = pkgs.mkShell {
+          packages = [
+            (self.packages.${pkgs.system}.velma.overrideAttrs (prev: {
+              propagatedBuildInputs = (prev.dependencies or [])
+                ++ [ pkgs.python3Packages.libclang ];
+              # required for banana-coding style checker
+            }))
+          ];
+        };
       });
 
       packages = forAllSystems (
