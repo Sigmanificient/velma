@@ -23,6 +23,13 @@ CLI_ARGS: dict[Sequence[str], dict[str, Any]] = {
         type=str,
         help="use the given directory as the vera root directory",
     ),
+    ("-d", "--no-duplicate"): dict(
+        action="store_true",
+        help=(
+            "do not duplicate messages if a single rule is violated many times"
+            " in a single line of code"
+        ),
+    ),
     "--version": dict(
         action="version", version=f"{__package__}, v{__version__}"
     ),
@@ -128,6 +135,7 @@ def main() -> int:
     files: list[str] = args.files or sys.stdin.read().splitlines()
 
     vera._register_sources(files)
+    vera._set_duplication_policy(args.no_duplicate)
     for script in scripts:
         exec_from_abspath(script)
 

@@ -11,6 +11,7 @@
 
 static PyObject *FILE_TABLE = NULL;
 static Py_ssize_t FILE_TABLE_SIZE = 0;
+static bool NO_DUPLICATION = 0;
 
 #define FILE_TABLE_MIN_SIZE 128
 #define UNUSED __attribute__((unused))
@@ -126,14 +127,55 @@ PyObject *py_is_binary(PyObject *self UNUSED, PyObject *args UNUSED)
 }
 
 static
+PyObject *py_set_duplication_policy(PyObject *self UNUSED, PyObject *args)
+{
+    if (!PyArg_ParseTuple(args, "b", &NO_DUPLICATION))
+        return NULL;
+    Py_RETURN_NONE;
+}
+
+static
 PyObject *py_report(PyObject *self UNUSED, PyObject *args)
 {
     int line;
     char *filename;
     char *violation;
+    static PyObject *reported_set = NULL;
 
     if (!PyArg_ParseTuple(args, "sis", &filename, &line, &violation))
         return NULL;
+
+    if (!NO_DUPLICATION)
+        goto print_warning;
+
+    if (reported_set == NULL) {
+        reported_set = PySet_New(NULL);
+        if (reported_set == NULL)
+            return NULL;
+    }
+
+    PyObject *key = Py_BuildValue("sis", filename, line, violation);
+    if (key == NULL)
+        return NULL;
+
+    int contains = PySet_Contains(reported_set, key);
+    if (contains < 0) {
+        Py_DECREF(key);
+        return NULL;
+    }
+
+    if (contains == 1) {
+        Py_DECREF(key);
+        Py_RETURN_NONE;
+    }
+
+    if (PySet_Add(reported_set, key) < 0) {
+        Py_DECREF(key);
+        return NULL;
+    }
+
+    Py_DECREF(key);
+print_warning:
     fprintf(stderr, "%s:%d: %s\n", filename, line, violation);
     Py_RETURN_NONE;
 }
@@ -172,6 +214,7 @@ PyMethodDef VERA_METHODS[] = {
     {"getLineCount", py_get_line_count, METH_VARARGS, "."},
     {"getParameter", py_get_parameter, METH_VARARGS, "."},
     {"_register_sources", py_register_sources, METH_VARARGS, "."},
+    {"_set_duplication_policy", py_set_duplication_policy, METH_VARARGS, "."},
     {"getSourceFileNames", py_get_source_filenames, METH_VARARGS, "."},
     {NULL, NULL, 0, NULL}
 };
